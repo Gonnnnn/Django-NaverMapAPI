@@ -1,0 +1,83 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <title>Naver Map API</title>
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=zp9j50niqf"></script>
+  </head>
+  <body>
+    <div id="map" style="width: 50rem; height: 30rem; margin: 10rem auto 10rem auto"></div>
+    <script>
+        var markerURI = "{%static 'naverMap/marker.png'%}"
+
+          {% comment %} yonsei university의 위치 {% endcomment %}
+        var mapOptions = {
+            center: new naver.maps.LatLng(37.56217937260205, 126.93731563081062),
+            maxZoom : 18,
+            minZoom : 10,
+            zoom : 15,
+        };
+
+        var map = new naver.maps.Map("map", mapOptions);
+
+        {% comment %} https://navermaps.github.io/maps.js.ncp/docs/tutorial-2-Marker.html 참고{% endcomment %}
+        var markers = [];
+        {% for collector in collectors %}
+          var markerOptions = {
+              title: '{{collector.name}}',
+              position: new naver.maps.LatLng({{collector.latitude}}, {{collector.longitude}}),
+              map: map,
+              icon: {
+                  url: markerURI,
+                  scaledSize: new naver.maps.Size(50, 50),
+                  anchor: new naver.maps.Point(25, 50)
+              }
+          };
+          var marker = new naver.maps.Marker(markerOptions);
+          markers.push(marker);
+        {% endfor %}
+
+      naver.maps.Event.addListener(map, 'zoom_changed', function() {
+          updateMarkers(map, markers);
+
+      });
+
+      naver.maps.Event.addListener(map, 'dragend', function() {
+          updateMarkers(map, markers);
+      });
+
+      function updateMarkers(map, markers) {
+
+          var mapBounds = map.getBounds();
+          var marker, position;
+
+          for (var i = 0; i < markers.length; i++) {
+
+              marker = markers[i]
+              position = marker.getPosition();
+
+              if (mapBounds.hasLatLng(position)) {
+                  showMarker(map, marker);
+              } else {
+                  hideMarker(map, marker);
+              }
+          }
+      }
+
+      function showMarker(map, marker) {
+
+          if (marker.setMap()) return;
+          marker.setMap(map);
+      }
+
+      function hideMarker(map, marker) {
+
+          if (!marker.setMap()) return;
+          marker.setMap(null);
+      }
+    </script>
+  </body>
+</html>
